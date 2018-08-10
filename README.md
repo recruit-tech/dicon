@@ -2,8 +2,8 @@
 
 DICONtainer Generator for go.
 
-[![CircleCI](https://circleci.com/gh/akito0107/dicon.svg?style=svg)](https://circleci.com/gh/akito0107/dicon)
-[![Go Report Card](https://goreportcard.com/badge/github.com/akito0107/dicon)](https://goreportcard.com/report/github.com/akito0107/dicon)
+[![CircleCI](https://circleci.com/gh/recruit-tech/dicon.svg?style=svg)](https://circleci.com/gh/recruit-tech/dicon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/recruit-tech/dicon)](https://goreportcard.com/report/github.com/recruit-tech/dicon)
 
 ## Getting Started
 
@@ -13,7 +13,7 @@ DICONtainer Generator for go.
 
 ### Installing
 ```
-$ go get -u github.com/akito0107/dicon
+$ go get -u github.com/recruit-tech/dicon
 ```
 
 ### How to use
