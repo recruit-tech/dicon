@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/akito0107/dicon/internal"
+	"github.com/recruit-tech/dicon/internal"
 	"github.com/urfave/cli"
 )
 

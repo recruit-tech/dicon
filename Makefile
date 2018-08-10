@@ -2,7 +2,7 @@ NAME := dicon
 VERSION := $(shell git tag -l | tail -1)
 REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' -X 'main.revision=$(REVISION)'
-PACKAGENAME := github.com/akito0107/dicon
+PACKAGENAME := github.com/recruit-tech/dicon
 
 .PHONY: setup dep test test/internal main clean install lint lint/internal
 
