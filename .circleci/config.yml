@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:latest
-    working_directory: /go/src/github.com/akito0107/dicon
+    working_directory: /go/src/github.com/recruit-tech/dicon
 
     environment:
       TEST_RESULTS: /tmp/test-results
