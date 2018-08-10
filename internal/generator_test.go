@@ -257,7 +257,7 @@ func TestGenerateSubPackage(t *testing.T) {
 	import (
 		"log"
 
-		"github.com/akito0107/dicon/sample"
+		"github.com/recruit-tech/dicon/sample"
 		"github.com/pkg/errors"
 	)
 
