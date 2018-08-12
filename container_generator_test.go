@@ -259,7 +259,6 @@ func TestContainerGenerator_Generate(t *testing.T) {
 	import (
 		"log"
 
-		"github.com/akito0107/dicon/sample"
 		"github.com/pkg/errors"
 	)
 
