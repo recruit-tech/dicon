@@ -13,7 +13,7 @@ DICONtainer Generator for go.
 
 ### Installing
 ```
-$ go get -u github.com/recruit-tech/dicon
+$ go get -u github.com/recruit-tech/dicon/cmd/dicon
 ```
 
 ### How to use
