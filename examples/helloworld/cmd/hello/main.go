@@ -1,6 +1,6 @@
 package main
 
-import "github.com/akito0107/dicon/examples/helloworld/di"
+import "github.com/recruit-tech/dicon/examples/helloworld/di"
 
 func main() {
 	container := di.NewDIContainer()

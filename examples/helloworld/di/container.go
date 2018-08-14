@@ -1,7 +1,7 @@
 package di
 
 import (
-	"github.com/akito0107/dicon/examples/helloworld/component"
+	"github.com/recruit-tech/dicon/examples/helloworld/component"
 )
 
 // +DICON

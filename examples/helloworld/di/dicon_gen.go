@@ -5,8 +5,8 @@ package di
 import (
 	"fmt"
 
-	"github.com/akito0107/dicon/examples/helloworld/component"
 	"github.com/pkg/errors"
+	"github.com/recruit-tech/dicon/examples/helloworld/component"
 )
 
 type dicontainer struct {

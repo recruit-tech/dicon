@@ -2,18 +2,18 @@ NAME := dicon/examples/helloworld
 VERSION := $(shell git tag -l | tail -1)
 REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' -X 'main.revision=$(REVISION)'
-PACKAGENAME := github.com/akito0107/dicon/examples/helloworld
+PACKAGENAME := github.com/recruit-tech/dicon/examples/helloworld
 
-.PHONY: setup dep test main clean install lint lint/internal
+.PHONY: setup main all
 
 all: main
 
 main:
-	go build -ldflags "$(LDFLAGS)"
+	go build -ldflags "$(LDFLAGS)" $(PACKAGENAME)/cmd/hello
 
 ## Install dependencies
 setup:
-	go get -u github.com/akito0107/dicon/cmd/dicon
+	go get -u github.com/recruit-tech/dicon/cmd/dicon
 
 ## generate DI Container
 dicon:
