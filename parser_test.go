@@ -159,6 +159,57 @@ func TestPackageParser_FindConstructorsErrors(t *testing.T) {
 	}
 }
 
+var TEST_COMPONENT_EMBEDDED = `
+package di
+
+type Embedded interface {
+	Run() error
+}
+
+type SampleComponent interface {
+	Embedded
+}
+
+type sampleComponent struct {
+	dep Dependency
+}
+
+func NewSampleComponent(dep Dependency) (SampleComponent, error) {
+	return &sampleComponent {
+		dep: dep,
+	}, nil
+}
+
+func (s *sampleComponent) Run() error {
+	return nil
+}
+`
+
+func TestPackageParser_FindConstructorsEmbedded(t *testing.T) {
+	fs, _ := findConstructors("test", "/tmp/tmp.go", TEST_COMPONENT_EMBEDDED, []string{"SampleComponent"})
+	if len(fs) != 1 {
+		t.Fatalf("must be 1, but %d", len(fs))
+	}
+
+	fun := fs[0]
+
+	if len(fun.ReturnTypes) != 2 || fun.ReturnTypes[0].SimpleName() != "SampleComponent" || fun.ReturnTypes[1].SimpleName() != "error" {
+		t.Errorf("return type: %s, %s wrong", fun.ReturnTypes[0].SimpleName(), fun.ReturnTypes[1].SimpleName())
+	}
+
+	if len(fun.ArgumentTypes) != 1 || fun.ArgumentTypes[0].SimpleName() != "Dependency" {
+		t.Errorf("arg type: %v wrong", fun.ArgumentTypes)
+	}
+
+	if fun.Name != "SampleComponent" {
+		t.Errorf("func name is SampleComponent but %s", fun.Name)
+	}
+
+	if fun.PackageName != "test" {
+		t.Errorf("package name is test but %s", fun.PackageName)
+	}
+}
+
 var TEST_DEPENDENCY = `
 package di
 
