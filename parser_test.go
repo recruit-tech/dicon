@@ -7,7 +7,8 @@ import (
 	"testing"
 )
 
-var TEST_FILE1 = `
+func TestPackageParser_findDicon(t *testing.T) {
+	src := `
 package main
 
 type Ex1 interface {
@@ -20,9 +21,7 @@ type Ex2 interface {
 	Exec2(i int) (string, error)
 }
 `
-
-func TestPackageParser_findDicon(t *testing.T) {
-	its, err := findDicon("main", "/tmp/tmp.go", TEST_FILE1, "+DICON")
+	its, err := findDicon("main", "/tmp/tmp.go", src, "+DICON")
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,7 +64,8 @@ func TestPackageParser_findDicon(t *testing.T) {
 	}
 }
 
-var TEST_COMPONENT = `
+func TestPackageParser_FindConstructors(t *testing.T) {
+	src := `
 package di
 
 type SampleComponent interface {
@@ -87,8 +87,7 @@ func (s *sampleComponent) Exec() error {
 }
 `
 
-func TestPackageParser_FindConstructors(t *testing.T) {
-	fs, _ := findConstructors("test", "/tmp/tmp.go", TEST_COMPONENT, []string{"SampleComponent"})
+	fs, _ := findConstructors("test", "/tmp/tmp.go", src, []string{"SampleComponent"})
 	if len(fs) != 1 {
 		t.Fatalf("must be 1")
 	}
@@ -112,7 +111,8 @@ func TestPackageParser_FindConstructors(t *testing.T) {
 	}
 }
 
-var TEST_COMPONENT_ERRORS = `
+func TestPackageParser_FindConstructorsErrors(t *testing.T) {
+	src := `
 package di
 
 type SampleComponent interface {
@@ -133,9 +133,7 @@ func (s *sampleComponent) Exec() error {
 	return nil
 }
 `
-
-func TestPackageParser_FindConstructorsErrors(t *testing.T) {
-	fs, _ := findConstructors("test", "/tmp/tmp.go", TEST_COMPONENT_ERRORS, []string{"SampleComponent"})
+	fs, _ := findConstructors("test", "/tmp/tmp.go", src, []string{"SampleComponent"})
 	if len(fs) != 1 {
 		t.Fatalf("must be 1, but %d", len(fs))
 	}
@@ -159,7 +157,8 @@ func TestPackageParser_FindConstructorsErrors(t *testing.T) {
 	}
 }
 
-var TEST_COMPONENT_EMBEDDED = `
+func TestPackageParser_FindConstructorsEmbedded(t *testing.T) {
+	src := `
 package di
 
 type Embedded interface {
@@ -185,8 +184,7 @@ func (s *sampleComponent) Run() error {
 }
 `
 
-func TestPackageParser_FindConstructorsEmbedded(t *testing.T) {
-	fs, _ := findConstructors("test", "/tmp/tmp.go", TEST_COMPONENT_EMBEDDED, []string{"SampleComponent"})
+	fs, _ := findConstructors("test", "/tmp/tmp.go", src, []string{"SampleComponent"})
 	if len(fs) != 1 {
 		t.Fatalf("must be 1, but %d", len(fs))
 	}
@@ -210,7 +208,8 @@ func TestPackageParser_FindConstructorsEmbedded(t *testing.T) {
 	}
 }
 
-var TEST_DEPENDENCY = `
+func TestPackageParer_parseDependencyFuncs(t *testing.T) {
+	src := `
 package di
 
 type Dependency interface {
@@ -227,8 +226,7 @@ func (*dependency) Run() error {
 }
 `
 
-func TestPackageParer_parseDependencyFuncs(t *testing.T) {
-	ds, _ := parseDependencyFuncs("test", []string{"Dependency"}, "/tmp/tmp.go", TEST_DEPENDENCY)
+	ds, _ := parseDependencyFuncs("test", []string{"Dependency"}, "/tmp/tmp.go", src)
 	if len(ds) != 1 {
 		t.Fatalf("dependency function length myst be 1 but %d", len(ds))
 	}
@@ -247,26 +245,29 @@ func TestPackageParer_parseDependencyFuncs(t *testing.T) {
 }
 
 func TestPackageParser_findInterface(t *testing.T) {
-	parseSpecs := func(src string) []ast.Spec {
+	parseSpecs := func(t *testing.T, src string) []ast.Spec {
+		t.Helper()
 		f, err := parser.ParseFile(token.NewFileSet(), "", "package test\n"+src, parser.AllErrors)
 		if err != nil {
 			t.Fatal(err)
 		}
-		return f.Decls[0].(*ast.GenDecl).Specs
+		decls := f.Decls[(len(f.Decls) - 1):]
+		return decls[0].(*ast.GenDecl).Specs
 	}
 
 	ts := []struct {
-		specs       []ast.Spec
+		name        string
+		src         string
 		packageName string
-
-		expected *InterfaceType
+		expected    *InterfaceType
 	}{
 		{
-			specs: parseSpecs(`
+			name: "multiple args",
+			src: `
 type A interface {
 	F(a, b int) (int, error)
 }
-`),
+`,
 			packageName: "test",
 
 			expected: &InterfaceType{
@@ -287,11 +288,12 @@ type A interface {
 			},
 		},
 		{
-			specs: parseSpecs(`
+			name: "single arg",
+			src: `
 type B interface {
 	F(a int) error
 }
-`),
+`,
 			packageName: "test",
 
 			expected: &InterfaceType{
@@ -310,11 +312,12 @@ type B interface {
 			},
 		},
 		{
-			specs: parseSpecs(`
+			name: "multi returns",
+			src: `
 type C interface {
 	F() (w, h int)
 }
-`),
+`,
 			packageName: "test",
 
 			expected: &InterfaceType{
@@ -334,52 +337,55 @@ type C interface {
 	}
 
 	for _, tc := range ts {
-		got, ok := findInterface(tc.packageName, tc.specs)
-		if ok != (tc.expected != nil) {
-			t.Errorf("unexpected result. expected: %v, but got: %v", tc.expected, got)
-			continue
-		}
-		if !ok {
-			continue
-		}
+		t.Run(tc.name, func(t *testing.T) {
 
-		if got.Name != tc.expected.Name {
-			t.Errorf("unexpected name. expected: %v, but got: %v", tc.expected.Name, got.Name)
-		}
-		if len(got.Funcs) != len(tc.expected.Funcs) {
-			t.Errorf("unexpected len(Funcs). expected: %v, but got: %v", len(tc.expected.Funcs), len(got.Funcs))
-		} else {
-			for i := range got.Funcs {
-				if got.Funcs[i].Name != tc.expected.Funcs[i].Name {
-					t.Errorf("unexpected Funcs[%d].Name. expected: %v, but got: %v", i,
-						tc.expected.Funcs[i].Name, got.Funcs[i].Name)
-				}
+			got, ok := findInterface(tc.packageName, parseSpecs(t, tc.src))
+			if ok != (tc.expected != nil) {
+				t.Errorf("unexpected result. expected: %v, but got: %v", tc.expected, got)
+				return
+			}
+			if !ok {
+				return
+			}
 
-				if len(got.Funcs[i].ArgumentTypes) != len(tc.expected.Funcs[i].ArgumentTypes) {
-					t.Errorf("unexpected len(Funcs[%d].ArgumentTypes). expected: %v, but got: %v", i,
-						len(tc.expected.Funcs[i].ArgumentTypes), len(got.Funcs[i].ArgumentTypes))
-				} else {
-					for j := range got.Funcs[i].ArgumentTypes {
-						if got.Funcs[i].ArgumentTypes[j].SimpleName() != tc.expected.Funcs[i].ArgumentTypes[j].SimpleName() {
-							t.Errorf("unexpected Funcs[%d].ArgumentTypes[%d]. expected: %v, but got: %v", i, j,
-								tc.expected.Funcs[i].ArgumentTypes[j].SimpleName(),
-								got.Funcs[i].ArgumentTypes[j].SimpleName())
+			if got.Name != tc.expected.Name {
+				t.Errorf("unexpected name. expected: %v, but got: %v", tc.expected.Name, got.Name)
+			}
+			if len(got.Funcs) != len(tc.expected.Funcs) {
+				t.Errorf("unexpected len(Funcs). expected: %v, but got: %v", len(tc.expected.Funcs), len(got.Funcs))
+			} else {
+				for i := range got.Funcs {
+					if got.Funcs[i].Name != tc.expected.Funcs[i].Name {
+						t.Errorf("unexpected Funcs[%d].Name. expected: %v, but got: %v", i,
+							tc.expected.Funcs[i].Name, got.Funcs[i].Name)
+					}
+
+					if len(got.Funcs[i].ArgumentTypes) != len(tc.expected.Funcs[i].ArgumentTypes) {
+						t.Errorf("unexpected len(Funcs[%d].ArgumentTypes). expected: %v, but got: %v", i,
+							len(tc.expected.Funcs[i].ArgumentTypes), len(got.Funcs[i].ArgumentTypes))
+					} else {
+						for j := range got.Funcs[i].ArgumentTypes {
+							if got.Funcs[i].ArgumentTypes[j].SimpleName() != tc.expected.Funcs[i].ArgumentTypes[j].SimpleName() {
+								t.Errorf("unexpected Funcs[%d].ArgumentTypes[%d]. expected: %v, but got: %v", i, j,
+									tc.expected.Funcs[i].ArgumentTypes[j].SimpleName(),
+									got.Funcs[i].ArgumentTypes[j].SimpleName())
+							}
 						}
 					}
-				}
-				if len(got.Funcs[i].ReturnTypes) != len(tc.expected.Funcs[i].ReturnTypes) {
-					t.Errorf("unexpected len(Funcs[%d].ReturnTypes). expected: %v, but got: %v", i,
-						len(tc.expected.Funcs[i].ReturnTypes), len(got.Funcs[i].ReturnTypes))
-				} else {
-					for j := range got.Funcs[i].ReturnTypes {
-						if got.Funcs[i].ReturnTypes[j].SimpleName() != tc.expected.Funcs[i].ReturnTypes[j].SimpleName() {
-							t.Errorf("unexpected Funcs[%d].ReturnTypes[%d]. expected: %v, but got: %v", i, j,
-								tc.expected.Funcs[i].ReturnTypes[j].SimpleName(),
-								got.Funcs[i].ReturnTypes[j].SimpleName())
+					if len(got.Funcs[i].ReturnTypes) != len(tc.expected.Funcs[i].ReturnTypes) {
+						t.Errorf("unexpected len(Funcs[%d].ReturnTypes). expected: %v, but got: %v", i,
+							len(tc.expected.Funcs[i].ReturnTypes), len(got.Funcs[i].ReturnTypes))
+					} else {
+						for j := range got.Funcs[i].ReturnTypes {
+							if got.Funcs[i].ReturnTypes[j].SimpleName() != tc.expected.Funcs[i].ReturnTypes[j].SimpleName() {
+								t.Errorf("unexpected Funcs[%d].ReturnTypes[%d]. expected: %v, but got: %v", i, j,
+									tc.expected.Funcs[i].ReturnTypes[j].SimpleName(),
+									got.Funcs[i].ReturnTypes[j].SimpleName())
+							}
 						}
 					}
 				}
 			}
-		}
+		})
 	}
 }
