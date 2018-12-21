@@ -61,6 +61,7 @@ func (cd *cyclicDetector) walk(name string, state *walkState) error {
 	if err := state.visit(name); err != nil {
 		return err
 	}
+	defer state.leave()
 	if _, ok := cd.visited[name]; ok {
 		return nil
 	}
@@ -69,7 +70,6 @@ func (cd *cyclicDetector) walk(name string, state *walkState) error {
 			return err
 		}
 	}
-	state.leave()
 	cd.visited[name] = struct{}{}
 	return nil
 }
